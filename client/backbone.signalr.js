@@ -63,16 +63,16 @@
                 var existing = collection.get(modelData.id);
                 if (existing) collection.remove(existing);
             });
-            
+
         };
     };
- 
+
     _.extend(Backbone.SignalR.prototype, {
         data: function (model) {
             return JSON.stringify(model.toJSON());
         },
 
-        success: function(options) {
+        success: function (options) {
             return function (resp) {
                 if (options.success) {
                     resp = JSON.parse(resp);
@@ -80,18 +80,19 @@
                 }
             };
         },
-        
-        failure: function(options) {
-            return function(resp) {
+
+        failure: function (options) {
+            return function (error) {
                 if (options.error) {
-                    options.error(resp);
+                    options.error(error);
                 }
             };
         },
-        
-        callHub: function(action, model, options) {
+
+        callHub: function (action, model, options) {
             var data = model ? this.data(model) : null;
-            return this.hub[action](data)
+            var result = data ? this.hub[action](data) : this.hub[action]();
+            return result
                 .done(this.success(options))
                 .fail(this.failure(options));
         },
