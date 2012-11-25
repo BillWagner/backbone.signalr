@@ -1,4 +1,4 @@
 backbone.signalr
 ================
 
-Backbone.sync layer for SignalR
+Backbone.snyc layer for SignalR
