@@ -17,7 +17,7 @@ You can search for it with the name Backbone.SignalR or you can install it direc
 This will bring in the dependencies of SignalR and Backbone.js if you don't already have it.  It will put `backbone.signalr.js` in your **Scripts** folder and it will put `BackboneModelHub.cs` into your **Hubs** folder
 
 ## Include the files manually ##
-You can simply include the **client/backbone.signalr.js** file in your project and then copy **server/BackboneModelHub.cs** somewhere in your project and that is all you need.
+If you don't want to use the Nuget package, you can simply include the **client/backbone.signalr.js** file in your project and then copy **server/BackboneModelHub.cs** somewhere in your project and that is all you need.
 
 # Using the Backbone Model Hub #
 
@@ -26,18 +26,18 @@ You need to create a Model Hub in order to synchronize with the Backbone Fronten
 ```csharp
 public class Person
 {
-    public string First {get; set;}
-    public string Last {get; set;}
+    public string First { get; set; }
+    public string Last { get; set; }
 }
 ```
 
-You can create a **PersonHub** which stores models in a collection like this:
+You can create a **PersonHub** which stores models in a collection for demonstration.  Override the actions that you want to support:
 ```csharp
 public class PersonHub : BackboneModelHub<Person>
 {
     private static readonly List<Person> people = new List<Person>();
 
-    protected override Person CreateModel(Person question)
+    protected override Person CreateModel(Person person)
     {
         person.Id = Guid.NewGuid();
         people.Add(person);
@@ -51,9 +51,9 @@ public class PersonHub : BackboneModelHub<Person>
 }
 ``` 
 
-Of course, the actualy mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or an ORM.  The static list is just an example.
+Of course, the actual mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or an ORM.  The static list is just an example.
 
-*Important: Note that the **PersonHub** is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.*
+**Important:** Note that the **PersonHub** is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.
 
 More overrides on the **BackboneModelHub** include:
 
