@@ -38,32 +38,120 @@
           <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
         </div>
 
-        <h3>Welcome to GitHub Pages.</h3>
+        <h1>backbone.signalr</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>Welcome to Backbone.SignalR, the sync layer for BackboneJS that lets you talk to a SignalR Server Hub.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<h1>Getting Started</h1>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>There are two simple ways to use Backbone.SignalR:</p>
 
-<h3>Designer Templates</h3>
+<h2>Installing the Nuget Package</h2>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>You can search for it with the name Backbone.SignalR or you can install it directly via the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:</p>
 
-<h3>Rather Drive Stick?</h3>
+<p><code>PM&gt; Install-Package Backbone.SignalR</code></p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>This will bring in the dependencies of SignalR and Backbone.js if you don't already have it.  It will put <code>backbone.signalr.js</code> in your <strong>Scripts</strong> folder and it will put <code>BackboneModelHub.cs</code> into your <strong>Hubs</strong> folder</p>
 
-<h3>Authors and Contributors</h3>
+<h2>Include the files manually</h2>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>If you don't want to use the Nuget package, you can simply include the <strong>client/backbone.signalr.js</strong> file in your project and then copy <strong>server/BackboneModelHub.cs</strong> somewhere in your project and that is all you need.</p>
 
-<h3>Support or Contact</h3>
+<h1>Using the Backbone Model Hub</h1>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p>You need to create a Model Hub in order to synchronize with the Backbone Frontend.  You have control over how the data is managed.  Let's say, for instance, that you have a model called <strong>Person</strong>:</p>
+
+<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">Person</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">First</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Last</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>You can create a <strong>PersonHub</strong> which stores models in a collection for demonstration.  Override the actions that you want to support:</p>
+
+<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PersonHub</span> <span class="p">:</span> <span class="n">BackboneModelHub</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">people</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;();</span>
+
+    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">CreateModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">person</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">person</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="n">NewGuid</span><span class="p">();</span>
+        <span class="n">people</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">person</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">protected</span> <span class="k">override</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">FindModels</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">people</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Of course, the actual mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or an ORM.  The static list is just an example.</p>
+
+<p><strong>Important:</strong> Note that the <strong>PersonHub</strong> is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.</p>
+
+<p>More overrides on the <strong>BackboneModelHub</strong> include:</p>
+
+<ul>
+<li>UpdateModel</li>
+<li>FindModel</li>
+<li>DeleteModel</li>
+</ul><div class="highlight"><pre>    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">UpdateModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">location</span> <span class="p">=</span> <span class="n">people</span><span class="p">.</span><span class="n">FindIndex</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">location</span> <span class="p">&lt;</span> <span class="m">0</span><span class="p">)</span> <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+
+        <span class="n">people</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="p">=</span> <span class="n">model</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">FindModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">people</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">DeleteModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">existing</span> <span class="p">=</span> <span class="n">people</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">existing</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+
+        <span class="n">people</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">existing</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">existing</span><span class="p">;</span>
+    <span class="p">}</span>
+</pre></div>
+
+<h1>Using the Client-Side Sync Layer</h1>
+
+<p>You will need to include SignalR, the Hubs, and <strong>Backbone.signalr.js</strong></p>
+
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/jquery.signalR-0.5.3.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"signalr/hubs"</span> <span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/backbone.signalr.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</pre></div>
+
+<p>Then, you can tell your collection to synchronize with the backend:</p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">Person</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({});</span>
+<span class="kd">var</span> <span class="nx">People</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">model</span><span class="o">:</span> <span class="nx">Person</span><span class="p">,</span>
+    <span class="nx">signalRHub</span><span class="o">:</span> <span class="k">new</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">SignalR</span><span class="p">(</span><span class="s2">"personHub"</span><span class="p">)</span>
+<span class="p">});</span>
+</pre></div>
+
+<p>If you want it to listen to real-time changes that are pushed from the server, simply tell it to do so:</p>
+
+<div class="highlight"><pre><span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">signalRHub</span><span class="p">.</span><span class="nx">syncUpdates</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<h1>Contributions</h1>
+
+<p>If you can think of any way to make this integration better, please let me know.  I will consider all pull requests as wel as recommendations.  </p>
       </section>
 
     </div>
