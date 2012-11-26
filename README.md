@@ -3,6 +3,7 @@ backbone.signalr
 
 Welcome to Backbone.SignalR, the sync layer for BackboneJS that lets you talk to a SignalR Server Hub.
 
+[Backbone.js ](http://backbonejs.org/) has a powerful model abstraction that allows you to synchronize your data with any backend.  By default, Backbone models synchronize with REST services, but the synchronization layer is replacable.  Backbone.signalr allows your models to synchronize with a real-time SignalR hub very easily.  In addition, all models on all clients will get updated in real-time!
 
 # Getting Started #
 There are two simple ways to use Backbone.SignalR:
@@ -21,7 +22,7 @@ If you don't want to use the Nuget package, you can simply include the **client/
 
 # Using the Backbone Model Hub #
 
-You need to create a Model Hub in order to synchronize with the Backbone Frontend.  You have control over how the data is managed.  Let's say, for instance, that you have a model called **Person**:
+You need to create a Model Hub in order to synchronize with the Backbone Frontend.  The base class handles the communication and updates, but you have control over how the data is managed.  Let's say, for instance, that you have a model called **Person**:
 
 ```csharp
 public class Person
