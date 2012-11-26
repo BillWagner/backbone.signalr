@@ -2,11 +2,11 @@
 <package >
   <metadata>
     <id>Backbone.SignalR</id>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
     <authors>Brian Genisio</authors>
     <owners>SRT Solutions</owners>
     <licenseUrl>https://github.com/SrtSolutions/backbone.signalr/blob/master/LICENSE</licenseUrl>
-    <projectUrl>https://github.com/SrtSolutions/backbone.signalr</projectUrl>
+    <projectUrl>http://srtsolutions.github.com/backbone.signalr</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This is an integration of BackboneJS and SignalR.  It includes the client and server-side components</description>
     <releaseNotes>First release</releaseNotes>
