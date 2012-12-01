@@ -144,7 +144,16 @@
 <span class="p">});</span>
 </pre></div>
 
-<p>If you want it to listen to real-time changes that are pushed from the server, simply tell it to do so:</p>
+<p>Now, after you start your SignalR connection, you can fetch, create, update and destroy data via SignalR:</p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">people</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">People</span><span class="p">();</span>
+
+<span class="nx">$</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">hub</span><span class="p">.</span><span class="nx">start</span><span class="p">().</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+   <span class="nx">people</span><span class="p">.</span><span class="nx">fetch</span><span class="p">();</span>
+<span class="p">});</span>
+</pre></div>
+
+<p>If you want it to listen to real-time changes that are pushed from the server, simply tell it to do so.  All clients who are listening will get model updates automatically:</p>
 
 <div class="highlight"><pre><span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">signalRHub</span><span class="p">.</span><span class="nx">syncUpdates</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
