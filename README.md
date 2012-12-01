@@ -107,7 +107,17 @@ var People = Backbone.Collection.extend({
 });
 ```
 
-If you want it to listen to real-time changes that are pushed from the server, simply tell it to do so:
+Now, after you start your SignalR connection, you can fetch, create, update and destroy data via SignalR:
+
+```javascript
+var people = new People();
+
+$.connection.hub.start().done(function() {
+   people.fetch();
+});
+````
+
+If you want it to listen to real-time changes that are pushed from the server, simply tell it to do so.  All clients who are listening will get model updates automatically:
 
 ```javascript
 initialize: function() {
