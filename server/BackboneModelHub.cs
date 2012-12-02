@@ -1,55 +1,83 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using SignalR;
 using SignalR.Hubs;
 
 namespace SRT.SignalR.Backbone
 {
-    public abstract class BackboneModelHub<T> : Hub where T : class
+    public abstract class BackboneModelHub<HubT, ModelT> : Hub  
+        where HubT : IHub
+        where ModelT : class
     {
-        protected virtual T CreateModel(T model)
+        private static IHubContext HubContext
         {
-            return model;
+            get { return GlobalHost.ConnectionManager.GetHubContext<HubT>(); }
         }
 
-        protected virtual T UpdateModel(T model)
+        private static JsonSerializerSettings Settings
         {
-            return model;
+            get { return new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }; }
         }
 
-        protected virtual T FindModel(T model)
+        private static ModelT Deserialize(string data)
         {
-            return null;
+            return JsonConvert.DeserializeObject<ModelT>(data, Settings);
         }
 
-        protected virtual IEnumerable<T> FindModels()
-        {
-            return new List<T>();
-        }
-
-        protected virtual T DeleteModel(T model)
-        {
-            return null;
-        }
-
-        private JsonSerializerSettings Settings
-        {
-            get { return new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()}; }
-        }
-
-        private T Deserialize(string data)
-        {
-            return JsonConvert.DeserializeObject<T>(data, Settings);
-        }
-
-        private string Serialize(T model)
+        private static string Serialize(ModelT model)
         {
             return model != null ? JsonConvert.SerializeObject(model, Settings) : "{}";
         }
 
-        private string Serialize(IEnumerable<T> models)
+        private static string Serialize(IEnumerable<ModelT> models)
         {
             return models != null ? JsonConvert.SerializeObject(models, Settings) : "[]";
+        }
+
+        public static void BroadcastModelCreated(ModelT item)
+        {
+            HubContext.Clients.created(-1, Serialize(item));
+        }
+
+        public static void BroadcastModelUpdated(ModelT item)
+        {
+            HubContext.Clients.updated(-1, Serialize(item));
+        }
+
+        public static void BroadcastModelDestroyed(ModelT item)
+        {
+            HubContext.Clients.destroyed(-1, Serialize(item));
+        }
+
+        public static void BroadcastCollectionReset(IEnumerable<ModelT> items)
+        {
+            HubContext.Clients.resetItems(Serialize(items));
+        }
+
+        protected virtual ModelT CreateModel(ModelT model)
+        {
+            return model;
+        }
+
+        protected virtual ModelT UpdateModel(ModelT model)
+        {
+            return model;
+        }
+
+        protected virtual ModelT FindModel(ModelT model)
+        {
+            return null;
+        }
+
+        protected virtual IEnumerable<ModelT> FindModels()
+        {
+            return new List<ModelT>();
+        }
+
+        protected virtual ModelT DeleteModel(ModelT model)
+        {
+            return null;
         }
 
         public string Create(string data)
