@@ -216,7 +216,7 @@ new Backbone.SignalR("personHub").syncUpdates(people);
 people.fetch();
 
 $.connection.hub.start();
-
+```
 
 # Contributions #
 
