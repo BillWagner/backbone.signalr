@@ -63,7 +63,16 @@
                 var existing = collection.get(modelData.id);
                 if (existing) collection.remove(existing);
             });
+        };
 
+        self.hub.resetItems = function(data) {
+            if (!self.collections) return;
+
+            var modelData = JSON.parse(data);
+
+            _(self.collections).each(function(collection) {
+                collection.reset(modelData);
+            });
         };
     };
 
