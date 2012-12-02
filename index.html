@@ -73,7 +73,7 @@
 
 <p>You can create a <strong>PersonHub</strong> which stores models in a collection for demonstration.  Override the actions that you want to support:</p>
 
-<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PersonHub</span> <span class="p">:</span> <span class="n">BackboneModelHub</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PersonHub</span> <span class="p">:</span> <span class="n">BackboneModelHub</span><span class="p">&lt;</span><span class="n">PersonHub</span><span class="p">,</span> <span class="n">Person</span><span class="p">&gt;</span>
 <span class="p">{</span>
     <span class="k">private</span> <span class="k">static</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">people</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;();</span>
 
@@ -158,6 +158,96 @@
 <div class="highlight"><pre><span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">signalRHub</span><span class="p">.</span><span class="nx">syncUpdates</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
 <span class="p">}</span>
+</pre></div>
+
+<h1>Optional: Hybrid approach</h1>
+
+<p>If you already have existing controller that you want to use and you don't want to duplicate your efforts in the hub, it is pretty easy.  This is a hybrid approach and allows you to maintain a standard REST api for traditional communication but allows your clients to synchronize changes when they happen.</p>
+
+<p>In this case, you can create your hub without any persistence details:</p>
+
+<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PersonHub</span> <span class="p">:</span> <span class="n">BackboneModelHub</span><span class="p">&lt;</span><span class="n">PersonHub</span><span class="p">,</span> <span class="n">Person</span><span class="p">&gt;</span>
+<span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>The hub exposes several static methods that can be called from anywhere:</p>
+
+<ul>
+<li>BroadcastModelCreated </li>
+<li>BroadcastModelUpdated</li>
+<li>BroadcastModelDestroyed</li>
+<li>BroadcastCollectionReset</li>
+</ul><p>The last one (BroadcastCollectionReset) is used when your entire back-end collection has changed enough so that you want to tell all of the clients that they need to reset.  The synchronization on the client will call Collection.reset with the collection you send it.</p>
+
+<p>So, imagine you have a WebAPI controller that manages people.  You just need to call the Hub's static methods:</p>
+
+<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PeopleController</span> <span class="p">:</span> <span class="n">ApiController</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">People</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;();</span>
+
+    <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">Get</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">People</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Get</span><span class="p">(</span><span class="n">Guid</span> <span class="n">id</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">People</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">id</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Post</span><span class="p">([</span><span class="n">FromBody</span><span class="p">]</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">model</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="n">NewGuid</span><span class="p">();</span>
+        <span class="n">People</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+
+        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelCreated</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Put</span><span class="p">(</span><span class="n">Guid</span> <span class="n">id</span><span class="p">,</span> <span class="p">[</span><span class="n">FromBody</span><span class="p">]</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">location</span> <span class="p">=</span> <span class="n">People</span><span class="p">.</span><span class="n">FindIndex</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">location</span> <span class="p">&lt;</span> <span class="m">0</span><span class="p">)</span> <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+
+        <span class="n">People</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="p">=</span> <span class="n">model</span><span class="p">;</span>
+
+        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelUpdated</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Delete</span><span class="p">(</span><span class="n">Guid</span> <span class="n">id</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">model</span> <span class="p">=</span> <span class="n">Get</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">model</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+
+        <span class="n">People</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+
+        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelDestroyed</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>The Client-side javascript collection would synchronize with the REST service like it normally would:</p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">Person</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({});</span>
+<span class="kd">var</span> <span class="nx">People</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">model</span><span class="o">:</span> <span class="nx">Person</span><span class="p">,</span>
+    <span class="nx">url</span><span class="o">:</span> <span class="s2">"/api/person"</span>
+<span class="p">});</span>
+</pre></div>
+
+<p>But when you create your collection, you sync updates that come from SignalR:</p>
+
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">people</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">People</span><span class="p">();</span>
+<span class="k">new</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">SignalR</span><span class="p">(</span><span class="s2">"personHub"</span><span class="p">).</span><span class="nx">syncUpdates</span><span class="p">(</span><span class="nx">people</span><span class="p">);</span>
+<span class="nx">people</span><span class="p">.</span><span class="nx">fetch</span><span class="p">();</span>
+
+<span class="nx">$</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">hub</span><span class="p">.</span><span class="nx">start</span><span class="p">();</span>
 </pre></div>
 
 <h1>Contributions</h1>
