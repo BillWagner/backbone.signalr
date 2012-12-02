@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Backbone.SignalR</id>
-    <version>0.4.4</version>
+    <version>0.5.0</version>
     <authors>Brian Genisio</authors>
     <owners>SRT Solutions</owners>
     <licenseUrl>https://github.com/SrtSolutions/backbone.signalr/blob/master/LICENSE</licenseUrl>
@@ -12,7 +12,7 @@
     <summary>
     Synchronize your Backbone.js models in real-time using SignalR hubs.  
     </summary>
-    <releaseNotes>Updated the description</releaseNotes>
+    <releaseNotes>Updated the hub to support static methods so that it can be called externally (like from a controller).</releaseNotes>
     <copyright>Copyright 2012</copyright>
     <tags>SignalR BackboneJS</tags>
     <dependencies>
