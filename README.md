@@ -34,7 +34,7 @@ public class Person
 
 You can create a **PersonHub** which stores models in a collection for demonstration.  Override the actions that you want to support:
 ```csharp
-public class PersonHub : BackboneModelHub<Person>
+public class PersonHub : BackboneModelHub<PersonHub, Person>
 {
     private static readonly List<Person> people = new List<Person>();
 
@@ -124,6 +124,99 @@ initialize: function() {
 	this.signalRHub.syncUpdates(this);
 }
 ```
+
+# Optional: Hybrid approach #
+If you already have existing controller that you want to use and you don't want to duplicate your efforts in the hub, it is pretty easy.  This is a hybrid approach and allows you to maintain a standard REST api for traditional communication but allows your clients to synchronize changes when they happen.
+
+In this case, you can create your hub without any persistence details:
+
+```csharp
+public class PersonHub : BackboneModelHub<PersonHub, Person>
+{
+}
+```
+
+The hub exposes several static methods that can be called from anywhere:
+
+- BroadcastModelCreated 
+- BroadcastModelUpdated
+- BroadcastModelDestroyed
+- BroadcastCollectionReset
+
+The last one (BroadcastCollectionReset) is used when your entire back-end collection has changed enough so that you want to tell all of the clients that they need to reset.  The synchronization on the client will call Collection.reset with the collection you send it.
+
+So, imagine you have a WebAPI controller that manages people.  You just need to call the Hub's static methods:
+
+```csharp
+public class PeopleController : ApiController
+{
+    private static readonly List<Person> People = new List<Person>();
+
+    public IEnumerable<Person> Get()
+    {
+        return People;
+    }
+
+    public Person Get(Guid id)
+    {
+        return People.Find(p => p.Id == id);
+    }
+
+    public Person Post([FromBody]Person model)
+    {
+        model.Id = Guid.NewGuid();
+        People.Add(model);
+
+        PersonHub.BroadcastModelCreated(model);
+
+        return model;
+    }
+
+    public Person Put(Guid id, [FromBody]Person model)
+    {
+        var location = People.FindIndex(p => p.Id == model.Id);
+        if (location < 0) return model;
+
+        People[location] = model;
+
+        PersonHub.BroadcastModelUpdated(model);
+
+        return model;
+    }
+
+    public Person Delete(Guid id)
+    {
+        var model = Get(id);
+        if (model == null) return null;
+
+        People.Remove(model);
+
+        PersonHub.BroadcastModelDestroyed(model);
+
+        return model;
+    }
+}
+```
+
+The Client-side javascript collection would synchronize with the REST service like it normally would:
+
+```javascript
+var Person = Backbone.Model.extend({});
+var People = Backbone.Collection.extend({
+	model: Person,
+	url: "/api/person"
+});
+```
+
+But when you create your collection, you sync updates that come from SignalR:
+
+```javascript
+var people = new People();
+new Backbone.SignalR("personHub").syncUpdates(people);
+people.fetch();
+
+$.connection.hub.start();
+
 
 # Contributions #
 
