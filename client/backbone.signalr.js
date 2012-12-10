@@ -100,7 +100,7 @@
 
         callHub: function (action, model, options) {
             var data = model ? this.data(model) : null;
-            var result = data ? this.hub[action](data) : this.hub[action]();
+            var result = data ? this.hub.server[action](data) : this.hub.server[action]();
             return result
                 .done(this.success(options))
                 .fail(this.failure(options));
