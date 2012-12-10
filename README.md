@@ -101,10 +101,10 @@ More overrides on the **BackboneModelHub** include:
 ```
 
 # Using the Client-Side Sync Layer #
-You will need to include SignalR, the Hubs, and **Backbone.signalr.js**
+You will need to include SignalR (version to change as it progresses), the Hubs, and **Backbone.signalr.js**
 
 ```html
-<script src="~/Scripts/jquery.signalR-0.5.3.min.js"></script>
+<script src="~/Scripts/jquery.signalR-1.0.0-alpha2.min.js"></script>
 <script src="signalr/hubs" type="text/javascript"></script>
 <script src="~/Scripts/backbone.signalr.js"></script>
 ```
