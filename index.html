@@ -44,15 +44,17 @@
 
 <p><a href="http://backbonejs.org/">Backbone.js </a> has a powerful model abstraction that allows you to synchronize your data with any data source (via Backbone.sync).  By default, Backbone models "sync" with REST services, but the Backbone.sync layer is replacable.  Backbone.signalr allows your models to "sync" with a real-time <a href="http://signalr.net/">SignalR</a> hub very easily.  In addition, all models on all clients will get updated in real-time!</p>
 
+<p>Backbone.SignalR works with SignalR 1.0.  Looking for SignalR 0.5 support?  We've tagged it for you: (<a href="https://github.com/SrtSolutions/backbone.signalr/tags" title="Backbone.SignalR 0.5.0">https://github.com/SrtSolutions/backbone.signalr/tags</a>)</p>
+
 <h1>Getting Started</h1>
 
 <p>There are two simple ways to use Backbone.SignalR:</p>
 
 <h2>Installing the Nuget Package</h2>
 
-<p>You can search for it with the name Backbone.SignalR or you can install it directly via the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:</p>
+<p>You can search for it with the name Backbone.SignalR (and include pre-release packages) or you can install it directly via the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:</p>
 
-<p><code>PM&gt; Install-Package Backbone.SignalR</code></p>
+<p><code>PM&gt; Install-Package Backbone.SignalR -Pre</code></p>
 
 <p>This will bring in the dependencies of SignalR and Backbone.js if you don't already have it.  It will put <code>backbone.signalr.js</code> in your <strong>Scripts</strong> folder and it will put <code>BackboneModelHub.cs</code> into your <strong>Hubs</strong> folder</p>
 
@@ -66,8 +68,14 @@
 
 <div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">Person</span>
 <span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">ID</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
     <span class="k">public</span> <span class="kt">string</span> <span class="n">First</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
     <span class="k">public</span> <span class="kt">string</span> <span class="n">Last</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">PersonDBContext</span> <span class="p">:</span> <span class="n">DbContext</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">DbSet</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">Person</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -75,25 +83,26 @@
 
 <div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PersonHub</span> <span class="p">:</span> <span class="n">BackboneModelHub</span><span class="p">&lt;</span><span class="n">PersonHub</span><span class="p">,</span> <span class="n">Person</span><span class="p">&gt;</span>
 <span class="p">{</span>
-    <span class="k">private</span> <span class="k">static</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">people</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;();</span>
+    <span class="k">private</span> <span class="k">readonly</span> <span class="n">PersonDBContext</span> <span class="n">_db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">PersonDBContext</span><span class="p">();</span>
 
-    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">CreateModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">person</span><span class="p">)</span>
+    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">CreateModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="n">person</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="n">NewGuid</span><span class="p">();</span>
-        <span class="n">people</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
-        <span class="k">return</span> <span class="n">person</span><span class="p">;</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">SaveChanges</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
     <span class="p">}</span>
 
     <span class="k">protected</span> <span class="k">override</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">FindModels</span><span class="p">()</span>
     <span class="p">{</span>
-        <span class="k">return</span> <span class="n">people</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">AsEnumerable</span><span class="p">();</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 
-<p>Of course, the actual mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or an ORM.  The static list is just an example.</p>
+<p>Of course, the actual mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or annother ORM.  This Entity Framework example is just to get you started.</p>
 
-<p><strong>Important:</strong> Note that the <strong>PersonHub</strong> is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.</p>
+<p><strong>Important:</strong> The <strong>PersonHub</strong> is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.</p>
 
 <p>More overrides on the <strong>BackboneModelHub</strong> include:</p>
 
@@ -101,28 +110,30 @@
 <li>UpdateModel</li>
 <li>FindModel</li>
 <li>DeleteModel</li>
-</ul><div class="highlight"><pre>    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">UpdateModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+</ul><div class="highlight"><pre>    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">FindModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="kt">var</span> <span class="n">location</span> <span class="p">=</span> <span class="n">people</span><span class="p">.</span><span class="n">FindIndex</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">location</span> <span class="p">&lt;</span> <span class="m">0</span><span class="p">)</span> <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
-
-        <span class="n">people</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="p">=</span> <span class="n">model</span><span class="p">;</span>
-        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">ID</span><span class="p">);</span>
     <span class="p">}</span>
 
-    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">FindModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">UpdateModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="k">return</span> <span class="n">people</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">model</span><span class="p">).</span><span class="n">State</span> <span class="p">=</span> <span class="n">EntityState</span><span class="p">.</span><span class="n">Modified</span><span class="p">;</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">SaveChanges</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
     <span class="p">}</span>
 
     <span class="k">protected</span> <span class="k">override</span> <span class="n">Person</span> <span class="nf">DeleteModel</span><span class="p">(</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="kt">var</span> <span class="n">existing</span> <span class="p">=</span> <span class="n">people</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
+        <span class="n">Person</span> <span class="n">person</span> <span class="p">=</span> <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">ID</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">person</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+        <span class="p">}</span>
 
-        <span class="k">if</span> <span class="p">(</span><span class="n">existing</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">SaveChanges</span><span class="p">();</span>
 
-        <span class="n">people</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">existing</span><span class="p">);</span>
-        <span class="k">return</span> <span class="n">existing</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">person</span><span class="p">;</span>
     <span class="p">}</span>
 </pre></div>
 
@@ -182,52 +193,60 @@
 
 <p>So, imagine you have a WebAPI controller that manages people.  You just need to call the Hub's static methods:</p>
 
-<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PeopleController</span> <span class="p">:</span> <span class="n">ApiController</span>
+<div class="highlight"><pre><span class="k">public</span> <span class="k">class</span> <span class="nc">PersonController</span> <span class="p">:</span> <span class="n">ApiController</span>
 <span class="p">{</span>
-    <span class="k">private</span> <span class="k">static</span> <span class="k">readonly</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">People</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;();</span>
+    <span class="k">private</span> <span class="k">readonly</span> <span class="n">PersonDBContext</span> <span class="n">_db</span> <span class="p">=</span> <span class="k">new</span> <span class="n">PersonDBContext</span><span class="p">();</span>
 
-    <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">Get</span><span class="p">()</span>
+    <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Person</span><span class="p">&gt;</span> <span class="n">GetPeople</span><span class="p">()</span>
     <span class="p">{</span>
-        <span class="k">return</span> <span class="n">People</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">AsEnumerable</span><span class="p">();</span>
     <span class="p">}</span>
 
-    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Get</span><span class="p">(</span><span class="n">Guid</span> <span class="n">id</span><span class="p">)</span>
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">GetPerson</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="k">return</span> <span class="n">People</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">id</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
     <span class="p">}</span>
 
-    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Post</span><span class="p">([</span><span class="n">FromBody</span><span class="p">]</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">PutPerson</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">,</span> <span class="n">Person</span> <span class="n">person</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="n">model</span><span class="p">.</span><span class="n">Id</span> <span class="p">=</span> <span class="n">Guid</span><span class="p">.</span><span class="n">NewGuid</span><span class="p">();</span>
-        <span class="n">People</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">person</span><span class="p">).</span><span class="n">State</span> <span class="p">=</span> <span class="n">EntityState</span><span class="p">.</span><span class="n">Modified</span><span class="p">;</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">SaveChanges</span><span class="p">();</span>
 
-        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelCreated</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelUpdated</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
 
-        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">person</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Put</span><span class="p">(</span><span class="n">Guid</span> <span class="n">id</span><span class="p">,</span> <span class="p">[</span><span class="n">FromBody</span><span class="p">]</span><span class="n">Person</span> <span class="n">model</span><span class="p">)</span>
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">PostPerson</span><span class="p">(</span><span class="n">Person</span> <span class="n">person</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="kt">var</span> <span class="n">location</span> <span class="p">=</span> <span class="n">People</span><span class="p">.</span><span class="n">FindIndex</span><span class="p">(</span><span class="n">p</span> <span class="p">=&gt;</span> <span class="n">p</span><span class="p">.</span><span class="n">Id</span> <span class="p">==</span> <span class="n">model</span><span class="p">.</span><span class="n">Id</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">location</span> <span class="p">&lt;</span> <span class="m">0</span><span class="p">)</span> <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">SaveChanges</span><span class="p">();</span>
 
-        <span class="n">People</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="p">=</span> <span class="n">model</span><span class="p">;</span>
+        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelCreated</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
 
-        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelUpdated</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
-
-        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">person</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="k">public</span> <span class="n">Person</span> <span class="nf">Delete</span><span class="p">(</span><span class="n">Guid</span> <span class="n">id</span><span class="p">)</span>
+    <span class="k">public</span> <span class="n">Person</span> <span class="nf">DeletePerson</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="kt">var</span> <span class="n">model</span> <span class="p">=</span> <span class="n">Get</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">model</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+        <span class="n">Person</span> <span class="n">person</span> <span class="p">=</span> <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Find</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">person</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+        <span class="p">}</span>
 
-        <span class="n">People</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Person</span><span class="p">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">SaveChanges</span><span class="p">();</span>
 
-        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelDestroyed</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+        <span class="n">PersonHub</span><span class="p">.</span><span class="n">BroadcastModelDestroyed</span><span class="p">(</span><span class="n">person</span><span class="p">);</span>
 
-        <span class="k">return</span> <span class="n">model</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">person</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">protected</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">Dispose</span><span class="p">(</span><span class="kt">bool</span> <span class="n">disposing</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">_db</span><span class="p">.</span><span class="n">Dispose</span><span class="p">();</span>
+        <span class="k">base</span><span class="p">.</span><span class="n">Dispose</span><span class="p">(</span><span class="n">disposing</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
