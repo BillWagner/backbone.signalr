@@ -18,16 +18,14 @@
 
         self.hubName = hubName;
         self.hub = $.connection[hubName];
-        self.clientId = function () { return $.connection.hub.id; };
         self.collections = [];
 
         self.syncUpdates = function (collection) {
             self.collections.push(collection);
         };
 
-        self.hub.client.created = function (clientId, data) {
+        self.hub.client.created = function (data) {
             if (!self.collections) return;
-            if (self.clientId() == clientId) return;
 
             var modelData = JSON.parse(data);
 
@@ -36,9 +34,8 @@
             });
         };
 
-        self.hub.client.updated = function (clientId, data) {
+        self.hub.client.updated = function (data) {
             if (!self.collections) return;
-            if (self.clientId() == clientId) return;
 
             var modelData = JSON.parse(data);
 
@@ -53,9 +50,8 @@
             });
         };
 
-        self.hub.client.destroyed = function (clientId, data) {
+        self.hub.client.destroyed = function (data) {
             if (!self.collections) return;
-            if (self.clientId() == clientId) return;
 
             var modelData = JSON.parse(data);
 

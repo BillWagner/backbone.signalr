@@ -3,6 +3,7 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+
 namespace SRT.SignalR.Backbone
 {
     public abstract class BackboneModelHub<HubT, ModelT> : Hub
@@ -36,17 +37,17 @@ namespace SRT.SignalR.Backbone
 
         public static void BroadcastModelCreated(ModelT item)
         {
-            HubContext.Clients.All.created(-1, Serialize(item));
+            HubContext.Clients.All.created(Serialize(item));
         }
 
         public static void BroadcastModelUpdated(ModelT item)
         {
-            HubContext.Clients.All.updated(-1, Serialize(item));
+            HubContext.Clients.All.updated(Serialize(item));
         }
 
         public static void BroadcastModelDestroyed(ModelT item)
         {
-            HubContext.Clients.All.destroyed(-1, Serialize(item));
+            HubContext.Clients.All.destroyed(Serialize(item));
         }
 
         public static void BroadcastCollectionReset(IEnumerable<ModelT> items)
@@ -86,7 +87,7 @@ namespace SRT.SignalR.Backbone
 
             var result = Serialize(model);
 
-            Clients.All.created(Context.ConnectionId, result);
+            Clients.AllExcept(Context.ConnectionId).created(result);
             return result;
         }
 
@@ -96,7 +97,7 @@ namespace SRT.SignalR.Backbone
             model = UpdateModel(model);
 
             var result = Serialize(model);
-            Clients.All.updated(Context.ConnectionId, result);
+            Clients.AllExcept(Context.ConnectionId).updated(result);
             return result;
         }
 
@@ -123,7 +124,7 @@ namespace SRT.SignalR.Backbone
             model = DeleteModel(model);
 
             var result = Serialize(model);
-            Clients.All.destroyed(Context.ConnectionId, result);
+            Clients.AllExcept(Context.ConnectionId).destroyed(result);
             return result;
         }
     }
