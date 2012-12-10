@@ -3,7 +3,10 @@ backbone.signalr
  
 Welcome to Backbone.SignalR, the sync layer for BackboneJS that lets you talk to a SignalR Server Hub.
 
+
 [Backbone.js ](http://backbonejs.org/) has a powerful model abstraction that allows you to synchronize your data with any data source (via Backbone.sync).  By default, Backbone models "sync" with REST services, but the Backbone.sync layer is replacable.  Backbone.signalr allows your models to "sync" with a real-time [SignalR](http://signalr.net/) hub very easily.  In addition, all models on all clients will get updated in real-time!
+
+Backbone.SignalR works with SignalR 1.0.  Looking for SignalR 0.5 support?  We've tagged it for you: ([https://github.com/SrtSolutions/backbone.signalr/tags](https://github.com/SrtSolutions/backbone.signalr/tags "Backbone.SignalR 0.5.0"))
 
 # Getting Started #
 There are two simple ways to use Backbone.SignalR:
@@ -42,25 +45,26 @@ You can create a **PersonHub** which stores models in a collection for demonstra
 ```csharp
 public class PersonHub : BackboneModelHub<PersonHub, Person>
 {
-    private static readonly List<Person> people = new List<Person>();
+    private readonly PersonDBContext _db = new PersonDBContext();
 
-    protected override Person CreateModel(Person person)
+    protected override Person CreateModel(Person model)
     {
-        person.Id = Guid.NewGuid();
-        people.Add(person);
-        return person;
+        _db.Person.Add(model);
+        _db.SaveChanges();
+
+        return model;
     }
 
     protected override IEnumerable<Person> FindModels()
     {
-        return people;
+        return _db.Person.AsEnumerable();
     }
 }
 ``` 
 
-Of course, the actual mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or an ORM.  The static list is just an example.
+Of course, the actual mechanism to store and retrieve your data is up to you.  You might be talking to a service layer or annother ORM.  This Entity Framework example is just to get you started.
 
-**Important:** Note that the **PersonHub** is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.
+**Important:** The **PersonHub** is responsible for creating a unique identifier of some sort.  This might happen in your ORM, or you might add it here.  It is all up to you.
 
 More overrides on the **BackboneModelHub** include:
 
@@ -69,28 +73,30 @@ More overrides on the **BackboneModelHub** include:
 - DeleteModel
 
 ```csharp
-    protected override Person UpdateModel(Person model)
-    {
-        var location = people.FindIndex(p => p.Id == model.Id);
-        if (location < 0) return model;
-
-        people[location] = model;
-        return model;
-    }
-
     protected override Person FindModel(Person model)
     {
-        return people.Find(p => p.Id == model.Id);
+        return _db.Person.Find(model.ID);
+    }
+
+    protected override Person UpdateModel(Person model)
+    {
+        _db.Entry(model).State = EntityState.Modified;
+        _db.SaveChanges();
+        return model;
     }
 
     protected override Person DeleteModel(Person model)
     {
-        var existing = people.Find(p => p.Id == model.Id);
+        Person person = _db.Person.Find(model.ID);
+        if (person == null)
+        {
+            return null;
+        }
 
-        if (existing == null) return null;
+        _db.Person.Remove(person);
+        _db.SaveChanges();
 
-        people.Remove(existing);
-        return existing;
+        return person;
     }
 ```
 
@@ -154,52 +160,60 @@ The last one (BroadcastCollectionReset) is used when your entire back-end collec
 So, imagine you have a WebAPI controller that manages people.  You just need to call the Hub's static methods:
 
 ```csharp
-public class PeopleController : ApiController
+public class PersonController : ApiController
 {
-    private static readonly List<Person> People = new List<Person>();
+    private readonly PersonDBContext _db = new PersonDBContext();
 
-    public IEnumerable<Person> Get()
+    public IEnumerable<Person> GetPeople()
     {
-        return People;
+        return _db.Person.AsEnumerable();
     }
 
-    public Person Get(Guid id)
+    public Person GetPerson(int id)
     {
-        return People.Find(p => p.Id == id);
+        return _db.Person.Find(id);
     }
 
-    public Person Post([FromBody]Person model)
+    public Person PutPerson(int id, Person person)
     {
-        model.Id = Guid.NewGuid();
-        People.Add(model);
-
-        PersonHub.BroadcastModelCreated(model);
-
-        return model;
+        _db.Entry(person).State = EntityState.Modified;
+        _db.SaveChanges();
+            
+        PersonHub.BroadcastModelUpdated(person);
+            
+        return person;
     }
 
-    public Person Put(Guid id, [FromBody]Person model)
+    public Person PostPerson(Person person)
     {
-        var location = People.FindIndex(p => p.Id == model.Id);
-        if (location < 0) return model;
+        _db.Person.Add(person);
+        _db.SaveChanges();
 
-        People[location] = model;
+        PersonHub.BroadcastModelCreated(person);
 
-        PersonHub.BroadcastModelUpdated(model);
-
-        return model;
+        return person;
     }
 
-    public Person Delete(Guid id)
+    public Person DeletePerson(int id)
     {
-        var model = Get(id);
-        if (model == null) return null;
+        Person person = _db.Person.Find(id);
+        if (person == null)
+        {
+            return null;
+        }
 
-        People.Remove(model);
+        _db.Person.Remove(person);
+        _db.SaveChanges();
+                
+        PersonHub.BroadcastModelDestroyed(person);
 
-        PersonHub.BroadcastModelDestroyed(model);
+        return person;
+    }
 
-        return model;
+    protected override void Dispose(bool disposing)
+    {
+        _db.Dispose();
+        base.Dispose(disposing);
     }
 }
 ```
