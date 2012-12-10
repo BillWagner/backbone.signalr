@@ -11,9 +11,9 @@ There are two simple ways to use Backbone.SignalR:
 
 ## Installing the Nuget Package ##
 
-You can search for it with the name Backbone.SignalR or you can install it directly via the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console):
+You can search for it with the name Backbone.SignalR (and include pre-release packages) or you can install it directly via the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console):
 
-`PM> Install-Package Backbone.SignalR`
+`PM> Install-Package Backbone.SignalR -Pre`
 
 This will bring in the dependencies of SignalR and Backbone.js if you don't already have it.  It will put `backbone.signalr.js` in your **Scripts** folder and it will put `BackboneModelHub.cs` into your **Hubs** folder
 
@@ -27,8 +27,14 @@ You need to create a Model Hub in order to synchronize with the Backbone Fronten
 ```csharp
 public class Person
 {
+    public int ID { get; set; }
     public string First { get; set; }
     public string Last { get; set; }
+}
+
+public class PersonDBContext : DbContext
+{
+    public DbSet<Person> Person { get; set; }
 }
 ```
 
