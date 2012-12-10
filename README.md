@@ -1,6 +1,6 @@
 backbone.signalr
 ================
-
+ 
 Welcome to Backbone.SignalR, the sync layer for BackboneJS that lets you talk to a SignalR Server Hub.
 
 [Backbone.js ](http://backbonejs.org/) has a powerful model abstraction that allows you to synchronize your data with any data source (via Backbone.sync).  By default, Backbone models "sync" with REST services, but the Backbone.sync layer is replacable.  Backbone.signalr allows your models to "sync" with a real-time [SignalR](http://signalr.net/) hub very easily.  In addition, all models on all clients will get updated in real-time!
