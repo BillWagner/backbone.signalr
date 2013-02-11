@@ -40,13 +40,7 @@
             var modelData = JSON.parse(data);
 
             _(self.collections).each(function (collection) {
-                var existing = collection.get(modelData.id);
-
-                if (existing) {
-                    existing.set(modelData);
-                } else {
-                    collection.add(modelData);
-                }
+                collection.add(modelData, { merge: true });
             });
         };
 
@@ -56,8 +50,7 @@
             var modelData = JSON.parse(data);
 
             _(self.collections).each(function (collection) {
-                var existing = collection.get(modelData.id);
-                if (existing) collection.remove(existing);
+                collection.remove(modelData);
             });
         };
 
