@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Backbone.SignalR</id>
-    <version>0.6.1-signalrRC1</version>
+    <version>0.6.2-signalrRC2</version>
     <authors>Brian Genisio</authors>
     <owners>SRT Solutions</owners>
     <licenseUrl>https://github.com/SrtSolutions/backbone.signalr/blob/master/LICENSE</licenseUrl>
@@ -12,12 +12,12 @@
     <summary>
     Synchronize your Backbone.js models in real-time using SignalR hubs.  
     </summary>
-    <releaseNotes>Support for SignalR v1.0 RC1</releaseNotes>
-    <copyright>Copyright 2012</copyright>
+    <releaseNotes>Support for SignalR v1.0 RC2 and ability to use custom model ID attributes</releaseNotes>
+    <copyright>Copyright 2013</copyright>
     <tags>SignalR BackboneJS</tags>
     <dependencies>
-      <dependency id="Microsoft.AspNet.SignalR" version="1.0.0-rc1" />
-      <dependency id="Backbone.js" version="0.9.9" />
+      <dependency id="Microsoft.AspNet.SignalR" version="1.0.0-rc2" />
+      <dependency id="Backbone.js" version="0.9.10" />
     </dependencies>
   </metadata>
 </package>
