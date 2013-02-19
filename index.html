@@ -52,9 +52,9 @@
 
 <h2>Installing the Nuget Package</h2>
 
-<p>You can search for it with the name Backbone.SignalR (and include pre-release packages) or you can install it directly via the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:</p>
+<p>You can search for it with the name Backbone.SignalR or you can install it directly via the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console">Package Manager Console</a>:</p>
 
-<p><code>PM&gt; Install-Package Backbone.SignalR -Pre</code></p>
+<p><code>PM&gt; Install-Package Backbone.SignalR</code></p>
 
 <p>This will bring in the dependencies of SignalR and Backbone.js if you don't already have it.  It will put <code>backbone.signalr.js</code> in your <strong>Scripts</strong> folder and it will put <code>BackboneModelHub.cs</code> into your <strong>Hubs</strong> folder</p>
 
@@ -146,8 +146,12 @@
 
 <p>You will need to include SignalR (version to change as it progresses), the Hubs, and <strong>Backbone.signalr.js</strong></p>
 
-<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/jquery.signalR-1.0.0-rc2.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/jquery.signalR-1.0.0.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"signalr/hubs"</span> <span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;&lt;/script&gt;</span>
+
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/underscore.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/backbone.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+
 <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"~/Scripts/backbone.signalr.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
 </pre></div>
 
