@@ -14,9 +14,9 @@ There are two simple ways to use Backbone.SignalR:
 
 ## Installing the Nuget Package ##
 
-You can search for it with the name Backbone.SignalR (and include pre-release packages) or you can install it directly via the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console):
+You can search for it with the name Backbone.SignalR or you can install it directly via the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console):
 
-`PM> Install-Package Backbone.SignalR -Pre`
+`PM> Install-Package Backbone.SignalR`
 
 This will bring in the dependencies of SignalR and Backbone.js if you don't already have it.  It will put `backbone.signalr.js` in your **Scripts** folder and it will put `BackboneModelHub.cs` into your **Hubs** folder
 
@@ -110,8 +110,12 @@ RouteTable.Routes.MapHubs();
 You will need to include SignalR (version to change as it progresses), the Hubs, and **Backbone.signalr.js**
 
 ```html
-<script src="~/Scripts/jquery.signalR-1.0.0-rc2.min.js"></script>
+<script src="~/Scripts/jquery.signalR-1.0.0.js"></script>
 <script src="signalr/hubs" type="text/javascript"></script>
+
+<script src="~/Scripts/underscore.js"></script>
+<script src="~/Scripts/backbone.js"></script>
+
 <script src="~/Scripts/backbone.signalr.js"></script>
 ```
 
