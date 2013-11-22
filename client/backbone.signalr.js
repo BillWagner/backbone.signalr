@@ -30,7 +30,13 @@
             var modelData = JSON.parse(data);
 
             _(self.collections).each(function (collection) {
-                collection.add(modelData);
+            	if (collection.add) { //this is a bb collection
+            		collection.add(modelData);
+            	} else {
+            		//this is a bb model
+            		$.extend(collection.attributes, modelData);
+            		collection.trigger('change');
+            	}
             });
         };
 
@@ -40,7 +46,13 @@
             var modelData = JSON.parse(data);
 
             _(self.collections).each(function (collection) {
-                collection.add(modelData, { merge: true });
+            	if (collection.add) { //this is a bb collection
+            		collection.add(modelData, { merge: true });
+            	} else {
+            		//this is a bb model
+            		$.extend(collection.attributes, modelData);
+            		collection.trigger('change');
+            	}
             });
         };
 
@@ -50,7 +62,13 @@
             var modelData = JSON.parse(data);
 
             _(self.collections).each(function (collection) {
-                collection.remove(modelData);
+            	if (collection.remove) { //this is a bb collection
+            		collection.remove(modelData);
+            	} else {
+            		//this is a bb model
+            		//not sure if this is the best thing to do here
+            		collection = null;
+            	}
             });
         };
 
@@ -60,7 +78,13 @@
             var modelData = JSON.parse(data);
 
             _(self.collections).each(function (collection) {
-                collection.reset(modelData);
+            	if (collection.reset) { //this is a bb collection
+            		collection.reset(modelData);
+            	} else {
+            		//this is a bb model
+            		$.extend(collection.attributes, modelData);
+            		collection.trigger('change');
+            	}
             });
         };
     };
